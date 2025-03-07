@@ -97,3 +97,39 @@ class MoveObjectCommand(Command):
 
     def undo(self):
         self.obj.transform.position = self.old_position.copy()
+
+
+class DeleteObjectCommand(Command):
+    """Command to delete an object from the scene"""
+
+    def __init__(self, scene, obj):
+        self.scene = scene
+        self.obj = obj
+        self.parent = obj.parent  # Store the parent to restore the hierarchy
+        self.children = obj.children.copy()  # Store children to restore the hierarchy
+
+    def execute(self):
+        """Remove the object from the scene"""
+        # Remove from selection if it's selected
+        if self.obj in self.scene.selected_objects:
+            self.scene.selected_objects.remove(self.obj)
+            self.obj.selected = False
+
+        # Remove the object from the scene
+        self.scene.remove_object(self.obj)
+
+    def undo(self):
+        """Restore the object to the scene"""
+        # Add back to its parent (or the scene root if it was a top-level object)
+        if self.parent:
+            self.parent.add_child(self.obj)
+        else:
+            self.scene.add_object(self.obj)
+
+        # Restore its children
+        for child in self.children:
+            self.obj.add_child(child)
+
+        # If it was selected, re-select it
+        if self.obj.selected:
+            self.scene.select_object(self.obj, add_to_selection=True)

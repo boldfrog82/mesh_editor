@@ -138,9 +138,11 @@ class DesktopRenderer:
             y = v[1] * self.scale * factor + self.translate[1]
             projected.append((int(x), int(y)))
 
-        # Rest of the rendering code remains the same...
-        # Set a single color for all faces
-        base_color = (180, 180, 220)  # Light blue-gray color for all faces
+        # Set color based on selection state
+        base_color = (220, 220, 100) if mesh.selected else (
+        180, 180, 220)  # Yellow for selected, blue-gray for unselected
+        outline_color = (255, 255, 0) if mesh.selected else (30, 30, 30)  # Bright yellow outline for selected objects
+        outline_width = 2 if mesh.selected else 1  # Thicker outline for selected objects
 
         # Calculate face properties and determine visibility
         if hasattr(mesh, 'faces') and len(mesh.faces) > 0:
@@ -202,18 +204,74 @@ class DesktopRenderer:
                 if not self.wireframe_mode:
                     pygame.draw.polygon(surface, color, face_points)
                 # Always draw edges for better visibility
-                pygame.draw.polygon(surface, (30, 30, 30), face_points, 1)
+                pygame.draw.polygon(surface, outline_color, face_points, outline_width)
+
+            # # Find this section in the _render_mesh method in desktop_renderer.py
+            # # and remove or comment out this entire block of code:
+            #
+            # # Draw selected object bounding box if object is selected
+            # """
+            # if mesh.selected:
+            #     min_x = min_y = float('inf')
+            #     max_x = max_y = float('-inf')
+            #
+            #     # Find bounds of all projected points
+            #     for px, py in projected:
+            #         min_x = min(min_x, px)
+            #         min_y = min(min_y, py)
+            #         max_x = max(max_x, px)
+            #         max_y = max(max_y, py)
+            #
+            #     # Draw dashed bounding box
+            #     dash_length = 5
+            #     rect_points = [
+            #         (min_x, min_y), (max_x, min_y),
+            #         (max_x, max_y), (min_x, max_y)
+            #     ]
+            #
+            #     for i in range(4):
+            #         start = rect_points[i]
+            #         end = rect_points[(i + 1) % 4]
+            #
+            #         # Draw dashed line
+            #         dx = end[0] - start[0]
+            #         dy = end[1] - start[1]
+            #         length = ((dx ** 2) + (dy ** 2)) ** 0.5
+            #
+            #         if length > 0:
+            #             dx /= length
+            #             dy /= length
+            #
+            #             # Draw dashes
+            #             pos = start
+            #             drawn = 0
+            #             drawing = True
+            #
+            #             while drawn < length:
+            #                 segment_length = min(dash_length, length - drawn)
+            #                 end_seg = (pos[0] + dx * segment_length, pos[1] + dy * segment_length)
+            #
+            #                 if drawing:
+            #                     pygame.draw.line(surface, (255, 255, 0), pos, end_seg, 1)
+            #
+            #                 pos = end_seg
+            #                 drawn += segment_length
+            #                 drawing = not drawing
+            # """
 
         # Draw edges if no faces are available or in wireframe mode
         elif len(mesh.edges) > 0:
             for edge in mesh.edges:
                 if edge[0] < len(projected) and edge[1] < len(projected):
-                    pygame.draw.line(surface, (255, 255, 255), projected[edge[0]], projected[edge[1]], 1)
+                    pygame.draw.line(surface, outline_color, projected[edge[0]], projected[edge[1]], outline_width)
 
         # Draw vertices as small circles if requested
         if self.show_vertices:
+            vertex_color = (255, 100, 0) if mesh.selected else (255, 0, 0)  # Orange for selected, red for unselected
+            vertex_size = 3 if mesh.selected else 2  # Larger for selected
+
             for point in projected:
-                pygame.draw.circle(surface, (255, 0, 0), point, 2)
+                pygame.draw.circle(surface, vertex_color, point, vertex_size)
 
     def _draw_transformation_gizmos(self, surface):
         """Draw 3D transformation gizmos for the selected object"""

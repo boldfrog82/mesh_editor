@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from core.commands import MoveVerticesCommand, MoveObjectCommand, ScaleObjectCommand
+from core.commands import MoveVerticesCommand, MoveObjectCommand, ScaleObjectCommand, DeleteObjectCommand
 
 
 class DesktopInputHandler:
@@ -495,9 +495,12 @@ class DesktopInputHandler:
             engine.undo()
         elif key == pygame.K_y and self.modifiers["ctrl"]:
             engine.redo()
-        # Delete selected vertices
-        elif key == pygame.K_DELETE and self.selection_mode == "vertex":
-            self._delete_selected_vertices(engine)
+        # Delete selected objects or vertices
+        elif key == pygame.K_DELETE:
+            if self.selection_mode == "object":
+                self._delete_selected_objects(engine)
+            elif self.selection_mode == "vertex":
+                self._delete_selected_vertices(engine)
         # Toggle wireframe mode
         elif key == pygame.K_w:
             renderer = self._get_renderer(engine)
@@ -570,6 +573,29 @@ class DesktopInputHandler:
                 renderer.show_gizmos = False
                 renderer.transform_mode = None
                 print("Transform mode cancelled")
+
+    def _delete_selected_objects(self, engine):
+        """Delete the selected objects from the scene"""
+        # Get a copy of the selected objects to avoid modification during iteration
+        selected_objects = engine.scene.selected_objects.copy()
+
+        if not selected_objects:
+            print("No objects selected to delete")
+            return
+
+        print(f"Deleting {len(selected_objects)} object(s)")
+
+        # Delete each selected object
+        for obj in selected_objects:
+            # Create and execute the delete command
+            cmd = DeleteObjectCommand(engine.scene, obj)
+            engine.command_manager.execute(cmd)
+
+        # Clear the selection after deletion
+        engine.scene.clear_selection()
+
+        # Update the active mesh reference
+        self.active_mesh = None
 
     def _delete_selected_vertices(self, engine):
         """Delete selected vertices (placeholder)"""
