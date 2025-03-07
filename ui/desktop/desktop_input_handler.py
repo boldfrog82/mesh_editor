@@ -38,42 +38,22 @@ class DesktopInputHandler:
 
     def handle_event(self, event, engine):
         """Handle input events"""
-        if event.type == pygame.MOUSEMOTION:
-            self.mouse_position = event.pos
-
-            # Get the renderer
-            renderer = self._get_renderer(engine)
-            if not renderer:
-                return
-
-            # If gizmos are showing, highlight the axis under mouse
-            if renderer.show_gizmos and not self.dragging:
-                renderer.active_axis = renderer.get_axis_at_screen_pos(self.mouse_position)
-
-            # Handle dragging
-            if self.dragging:
-                if self.dragging_gizmo:
-                    self._handle_gizmo_drag(engine)
-                elif self.modifiers["alt"] and self.selection_mode == "vertex" and self.selected_vertices:
-                    # Manipulate vertices when Alt is pressed
-                    self._handle_vertex_manipulation(engine)
-                else:
-                    # Normal camera movement
-                    self._handle_drag(engine)
-
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN:
             button_idx = event.button - 1
             if 0 <= button_idx < len(self.mouse_buttons):
                 self.mouse_buttons[button_idx] = True
             self.drag_start = event.pos
 
-            # Get the renderer
+            # Get renderer
             renderer = self._get_renderer(engine)
-            if not renderer:
-                return
+            if renderer and renderer.show_orientation_gizmo:
+                # Check if the click was on the orientation gizmo
+                if hasattr(renderer, 'handle_gizmo_click'):
+                    if renderer.handle_gizmo_click(event.pos):
+                        return  # Handled by gizmo, don't process further
 
             # Check if clicking on a gizmo
-            if button_idx == 0 and renderer.show_gizmos:
+            if button_idx == 0 and renderer and renderer.show_gizmos:
                 axis = renderer.get_axis_at_screen_pos(self.mouse_position)
                 if axis:
                     self.dragging_gizmo = True
@@ -98,6 +78,29 @@ class DesktopInputHandler:
                     self._handle_selection(engine)
             else:
                 self._handle_click(engine, event.button)
+
+        elif event.type == pygame.MOUSEMOTION:
+            self.mouse_position = event.pos
+
+            # Get the renderer
+            renderer = self._get_renderer(engine)
+            if not renderer:
+                return
+
+            # If gizmos are showing, highlight the axis under mouse
+            if renderer.show_gizmos and not self.dragging:
+                renderer.active_axis = renderer.get_axis_at_screen_pos(self.mouse_position)
+
+            # Handle dragging
+            if self.dragging:
+                if self.dragging_gizmo:
+                    self._handle_gizmo_drag(engine)
+                elif self.modifiers["alt"] and self.selection_mode == "vertex" and self.selected_vertices:
+                    # Manipulate vertices when Alt is pressed
+                    self._handle_vertex_manipulation(engine)
+                else:
+                    # Normal camera movement
+                    self._handle_drag(engine)
 
         elif event.type == pygame.MOUSEBUTTONUP:
             button_idx = event.button - 1
@@ -437,7 +440,8 @@ class DesktopInputHandler:
         # Right mouse button: Orbit the VIEW/CAMERA around the object
         elif self.mouse_buttons[2]:
             # Convert to radians and scale down the movement
-            dx_rad = dx * 0.01
+            # Use negative dx to make rotation direction intuitive
+            dx_rad = -dx * 0.01
             dy_rad = dy * 0.01
 
             # Update the orbit angles
@@ -512,6 +516,33 @@ class DesktopInputHandler:
             if renderer and hasattr(renderer, 'show_grid'):
                 renderer.show_grid = not renderer.show_grid
                 print(f"Floor grid: {renderer.show_grid}")
+        # Toggle orientation gizmo
+        elif key == pygame.K_o and self.modifiers["ctrl"]:
+            renderer = self._get_renderer(engine)
+            if renderer and hasattr(renderer, 'show_orientation_gizmo'):
+                renderer.show_orientation_gizmo = not renderer.show_orientation_gizmo
+                print(f"Orientation gizmo: {renderer.show_orientation_gizmo}")
+        # Standard view shortcuts
+        elif key == pygame.K_F1:  # Front view
+            renderer = self._get_renderer(engine)
+            if renderer and hasattr(renderer, 'set_standard_view'):
+                renderer.set_standard_view('front')
+        elif key == pygame.K_F2:  # Right view
+            renderer = self._get_renderer(engine)
+            if renderer and hasattr(renderer, 'set_standard_view'):
+                renderer.set_standard_view('right')
+        elif key == pygame.K_F3:  # Top view
+            renderer = self._get_renderer(engine)
+            if renderer and hasattr(renderer, 'set_standard_view'):
+                renderer.set_standard_view('top')
+        elif key == pygame.K_F4:  # Left view
+            renderer = self._get_renderer(engine)
+            if renderer and hasattr(renderer, 'set_standard_view'):
+                renderer.set_standard_view('left')
+        elif key == pygame.K_HOME:  # Home/reset view
+            renderer = self._get_renderer(engine)
+            if renderer and hasattr(renderer, 'set_standard_view'):
+                renderer.set_standard_view('home')
         # Reset view rotation
         elif key == pygame.K_r:
             renderer = self._get_renderer(engine)

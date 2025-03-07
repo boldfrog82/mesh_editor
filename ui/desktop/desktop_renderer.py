@@ -31,8 +31,25 @@ class DesktopRenderer:
         self.active_axis = None  # "x", "y", "z", or None
         self.gizmo_size = 1.0
 
+        # Add font for gizmo labels
+        self.font = None
+
+        # Add orientation gizmo setting
+        self.show_orientation_gizmo = True
+        self.view_buttons = []  # Will store the view buttons (position, radius, type)
+
+    def init(self):
+        """Initialize renderer resources"""
+        # Create a font for gizmo labels if pygame font is initialized
+        if pygame.font.get_init():
+            self.font = pygame.font.SysFont('Arial', 12)
+
     def render(self, camera):
         """Render the scene using Pygame"""
+        # Initialize if needed
+        if self.font is None:
+            self.init()
+
         surface = pygame.display.get_surface()
 
         # Fill with background color
@@ -52,6 +69,10 @@ class DesktopRenderer:
         # Draw transformation gizmos if active
         if self.show_gizmos and self.scene.selected_objects:
             self._draw_transformation_gizmos(surface)
+
+        # Draw orientation gizmo on top of everything
+        if self.show_orientation_gizmo:
+            self._draw_orientation_gizmo(surface)
 
     def _render_scene_objects(self, surface):
         """Render all objects in the scene"""
@@ -308,7 +329,183 @@ class DesktopRenderer:
         # Draw the arrowhead
         pygame.draw.polygon(surface, color, [tip_pos, p1, p2])
 
-    # Rest of the existing methods...
+    def _draw_orientation_gizmo(self, surface):
+        """Draw a 3ds Max style orientation gizmo in the corner with clickable view buttons"""
+        # Set up position and size
+        screen_width, screen_height = surface.get_size()
+        gizmo_size = 80
+        margin = 20
+        center_x = screen_width - margin - gizmo_size // 2
+        center_y = screen_height - margin - gizmo_size // 2
+
+        # Draw background circle
+        pygame.draw.circle(surface, (40, 40, 50), (center_x, center_y), gizmo_size // 2)
+        pygame.draw.circle(surface, (80, 80, 100), (center_x, center_y), gizmo_size // 2, 1)
+
+        # Set up colors for view buttons
+        view_colors = {
+            'top': (190, 190, 190),  # White/Light gray
+            'bottom': (150, 150, 150),  # Gray
+            'left': (220, 60, 60),  # Red
+            'right': (220, 120, 120),  # Light red
+            'front': (60, 220, 60),  # Green
+            'back': (120, 220, 120),  # Light green
+            'home': (220, 220, 60)  # Yellow
+        }
+
+        # Store the view buttons with their positions and click handlers
+        # Each button is (centerX, centerY, radius, label, callback_type)
+        button_radius = gizmo_size // 8
+        self.view_buttons = []
+
+        # Top button (Y+)
+        top_pos = (center_x, center_y - gizmo_size // 3)
+        pygame.draw.circle(surface, view_colors['top'], top_pos, button_radius)
+        pygame.draw.circle(surface, (255, 255, 255), top_pos, button_radius, 1)
+        if self.font:
+            label = self.font.render("Top", True, (0, 0, 0))
+            label_rect = label.get_rect(center=top_pos)
+            surface.blit(label, label_rect)
+        self.view_buttons.append((*top_pos, button_radius, "top"))
+
+        # Front button (Z+)
+        front_pos = (center_x, center_y + gizmo_size // 3)
+        pygame.draw.circle(surface, view_colors['front'], front_pos, button_radius)
+        pygame.draw.circle(surface, (255, 255, 255), front_pos, button_radius, 1)
+        if self.font:
+            label = self.font.render("Front", True, (0, 0, 0))
+            label_rect = label.get_rect(center=front_pos)
+            surface.blit(label, label_rect)
+        self.view_buttons.append((*front_pos, button_radius, "front"))
+
+        # Right button (X+)
+        right_pos = (center_x + gizmo_size // 3, center_y)
+        pygame.draw.circle(surface, view_colors['right'], right_pos, button_radius)
+        pygame.draw.circle(surface, (255, 255, 255), right_pos, button_radius, 1)
+        if self.font:
+            label = self.font.render("Right", True, (0, 0, 0))
+            label_rect = label.get_rect(center=right_pos)
+            surface.blit(label, label_rect)
+        self.view_buttons.append((*right_pos, button_radius, "right"))
+
+        # Left button (X-)
+        left_pos = (center_x - gizmo_size // 3, center_y)
+        pygame.draw.circle(surface, view_colors['left'], left_pos, button_radius)
+        pygame.draw.circle(surface, (255, 255, 255), left_pos, button_radius, 1)
+        if self.font:
+            label = self.font.render("Left", True, (0, 0, 0))
+            label_rect = label.get_rect(center=left_pos)
+            surface.blit(label, label_rect)
+        self.view_buttons.append((*left_pos, button_radius, "left"))
+
+        # Home/Reset button (center)
+        home_pos = (center_x, center_y)
+        pygame.draw.circle(surface, view_colors['home'], home_pos, button_radius)
+        pygame.draw.circle(surface, (255, 255, 255), home_pos, button_radius, 1)
+        if self.font:
+            label = self.font.render("Home", True, (0, 0, 0))
+            label_rect = label.get_rect(center=home_pos)
+            surface.blit(label, label_rect)
+        self.view_buttons.append((*home_pos, button_radius, "home"))
+
+    def handle_gizmo_click(self, pos):
+        """Handle clicks on the orientation gizmo"""
+        # Check if any of the view buttons were clicked
+        for x, y, radius, view_type in self.view_buttons:
+            # Calculate distance to button center
+            dx = pos[0] - x
+            dy = pos[1] - y
+            dist = (dx * dx + dy * dy) ** 0.5
+
+            if dist <= radius:
+                # Button was clicked
+                self.set_standard_view(view_type)
+                return True
+
+        return False
+
+    def set_standard_view(self, view_type):
+        """Set a standard view based on type"""
+        # Reset the rotation matrix based on view type
+        if view_type == "top":
+            # Top view: Y is up
+            self.rotation_matrix = np.array([
+                [1, 0, 0],
+                [0, 0, -1],
+                [0, 1, 0]
+            ])
+            self.orbit_angle_horizontal = 0
+            self.orbit_angle_vertical = -np.pi / 2 + 0.1  # Almost -90 degrees
+
+        elif view_type == "front":
+            # Front view: Z is forward, Y is up
+            self.rotation_matrix = np.array([
+                [1, 0, 0],
+                [0, 1, 0],
+                [0, 0, 1]
+            ])
+            self.orbit_angle_horizontal = 0
+            self.orbit_angle_vertical = 0
+
+        elif view_type == "right":
+            # Right view: X is right
+            self.rotation_matrix = np.array([
+                [0, 0, -1],
+                [0, 1, 0],
+                [1, 0, 0]
+            ])
+            self.orbit_angle_horizontal = -np.pi / 2
+            self.orbit_angle_vertical = 0
+
+        elif view_type == "left":
+            # Left view: X is right (reversed)
+            self.rotation_matrix = np.array([
+                [0, 0, 1],
+                [0, 1, 0],
+                [-1, 0, 0]
+            ])
+            self.orbit_angle_horizontal = np.pi / 2
+            self.orbit_angle_vertical = 0
+
+        elif view_type == "home":
+            # Home/Default view (isometric-ish)
+            h_angle = -np.pi / 4  # -45 degrees
+            v_angle = np.pi / 6  # 30 degrees
+
+            # Horizontal rotation (around Y axis)
+            cos_h = np.cos(h_angle)
+            sin_h = np.sin(h_angle)
+            ry = np.array([
+                [cos_h, 0, sin_h],
+                [0, 1, 0],
+                [-sin_h, 0, cos_h]
+            ])
+
+            # Vertical rotation (around X axis)
+            cos_v = np.cos(v_angle)
+            sin_v = np.sin(v_angle)
+            rx = np.array([
+                [1, 0, 0],
+                [0, cos_v, -sin_v],
+                [0, sin_v, cos_v]
+            ])
+
+            # Create the rotation matrix
+            self.rotation_matrix = np.dot(ry, rx)
+            self.orbit_angle_horizontal = h_angle
+            self.orbit_angle_vertical = v_angle
+
+        print(f"View changed to: {view_type}")
+
+    def orbit_camera(self, delta_h, delta_v):
+        """Orbit the camera around the object"""
+        # Update orbit angles
+        self.orbit_angle_horizontal += delta_h
+        self.orbit_angle_vertical += delta_v
+
+        # No vertical angle limits to allow full rotation
+        # Horizontal angle will naturally wrap around in calculations
+
     def _rotate_vertices(self, vertices):
         """Apply rotation to vertices using rotation matrix"""
         # Apply the stored rotation matrix to each vertex
@@ -410,15 +607,6 @@ class DesktopRenderer:
                 int(origin_rotated[1] * self.scale * factor_origin + self.translate[1])
             )
             pygame.draw.circle(surface, (255, 255, 0), origin_2d, 4)
-
-    def orbit_camera(self, delta_h, delta_v):
-        """Orbit the camera around the object"""
-        # Update orbit angles
-        self.orbit_angle_horizontal += delta_h
-        self.orbit_angle_vertical += delta_v
-
-        # Limit vertical angle to avoid flipping
-        self.orbit_angle_vertical = max(-np.pi / 2 + 0.1, min(np.pi / 2 - 0.1, self.orbit_angle_vertical))
 
     def get_axis_at_screen_pos(self, mouse_pos):
         """Get the axis (if any) at the given screen position"""
