@@ -67,3 +67,33 @@ class MoveVerticesCommand(Command):
         """Restore the old positions"""
         for idx, pos in self.old_positions.items():
             self.mesh.vertices[idx] = pos.copy()
+
+
+class ScaleObjectCommand(Command):
+    """Command to scale an object"""
+
+    def __init__(self, obj, old_scale, new_scale):
+        self.obj = obj
+        self.old_scale = old_scale.copy()
+        self.new_scale = new_scale.copy()
+
+    def execute(self):
+        self.obj.transform.scale = self.new_scale.copy()
+
+    def undo(self):
+        self.obj.transform.scale = self.old_scale.copy()
+
+
+class MoveObjectCommand(Command):
+    """Command to move an object"""
+
+    def __init__(self, obj, old_position, new_position):
+        self.obj = obj
+        self.old_position = old_position.copy()
+        self.new_position = new_position.copy()
+
+    def execute(self):
+        self.obj.transform.position = self.new_position.copy()
+
+    def undo(self):
+        self.obj.transform.position = self.old_position.copy()

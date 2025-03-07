@@ -5,8 +5,8 @@ class DesktopUIManager:
     def __init__(self):
         self.buttons = []
         self.labels = []
-        self.active_panel = None
         self.font = None
+        self.small_font = None
         self.initialized = False
 
     def init(self):
@@ -14,6 +14,7 @@ class DesktopUIManager:
         if not self.initialized:
             pygame.font.init()
             self.font = pygame.font.SysFont('Arial', 14)
+            self.small_font = pygame.font.SysFont('Arial', 12)
             self._setup_ui()
             self.initialized = True
 
@@ -42,21 +43,21 @@ class DesktopUIManager:
             'hover_color': (150, 150, 150)
         })
 
-        # Add Cube button
+        # Add Move button
         self.buttons.append({
             'rect': pygame.Rect(margin, margin + button_height + margin, button_width, button_height),
-            'text': 'Add Cube',
-            'action': 'add_cube',
+            'text': 'Move (G)',
+            'action': 'activate_move',
             'color': (100, 100, 200),
             'hover_color': (150, 150, 220)
         })
 
-        # Add Sphere button
+        # Add Scale button
         self.buttons.append({
             'rect': pygame.Rect(margin + button_width + margin, margin + button_height + margin, button_width,
                                 button_height),
-            'text': 'Add Sphere',
-            'action': 'add_sphere',
+            'text': 'Scale (S)',
+            'action': 'activate_scale',
             'color': (100, 100, 200),
             'hover_color': (150, 150, 220)
         })
@@ -70,32 +71,33 @@ class DesktopUIManager:
             for button in self.buttons:
                 if button['rect'].collidepoint(event.pos):
                     self._handle_button_action(button['action'])
+                    return True
+
+        return False
 
     def _handle_button_action(self, action):
         """Handle button actions"""
         print(f"Button action: {action}")
 
-        # This would be connected to the actual engine in a real implementation
-        # For now, just log the action
-        if action == 'select_object_mode':
-            # Would set selection_mode to "object"
-            pass
-        elif action == 'select_vertex_mode':
-            # Would set selection_mode to "vertex"
-            pass
-        elif action == 'add_cube':
-            # Would add a new cube to the scene
-            pass
-        elif action == 'add_sphere':
-            # Would add a new sphere to the scene
-            pass
+        # We'll handle these in desktop_app.py
+        pass
 
     def update(self, dt):
         """Update UI state"""
         # Check mouse hover
         mouse_pos = pygame.mouse.get_pos()
+
+        # Update button hover state
         for button in self.buttons:
             button['hover'] = button['rect'].collidepoint(mouse_pos)
+
+    def get_transform_values(self):
+        """Get the current transformation values"""
+        # We don't use sliders anymore, so return default values
+        return {
+            'move': [0.0, 0.0, 0.0],
+            'scale': [1.0, 1.0, 1.0]
+        }
 
     def draw(self, surface):
         """Draw UI elements"""
@@ -113,11 +115,16 @@ class DesktopUIManager:
             surface.blit(text, text_rect)
 
         # Draw status info
-        status_text = "3D Mesh Editor - Press 1-4 to switch modes, Alt+drag to move vertices"
+        status_text = "3D Mesh Editor - Press G for move mode, S for scale mode, ESC to cancel"
         text = self.font.render(status_text, True, (200, 200, 200))
         surface.blit(text, (10, surface.get_height() - 30))
 
-        # Draw selection info
-        selection_text = "Mode: Object | Selected: None"
+        # Draw mode info
+        from pygame.rect import Rect
+        status_bg = Rect(10, surface.get_height() - 60, 300, 25)
+        pygame.draw.rect(surface, (40, 40, 50), status_bg)
+        pygame.draw.rect(surface, (80, 80, 100), status_bg, 1)
+
+        selection_text = "Mode: Object | Use arrow keys or mouse to manipulate objects"
         text = self.font.render(selection_text, True, (200, 200, 200))
-        surface.blit(text, (10, surface.get_height() - 50))
+        surface.blit(text, (15, surface.get_height() - 55))
