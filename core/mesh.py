@@ -26,9 +26,11 @@ class Mesh(SceneObject):
             self._create_sphere(size)
         # Additional primitives...
 
+    # In mesh.py, update the _create_cube method:
+
     def _create_cube(self, size):
         """Create a cube mesh"""
-        half = size / 2 * 0.2  # Reduced to 20% of original size
+        half = size / 2  # Use full size - removed the 0.2 reduction factor
         self.vertices = np.array([
             [-half, -half, -half],  # 0: back bottom left
             [half, -half, -half],  # 1: back bottom right

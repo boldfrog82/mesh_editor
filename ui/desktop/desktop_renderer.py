@@ -482,9 +482,10 @@ class DesktopRenderer:
 
         return False
 
+    # Replace the set_standard_view method in desktop_renderer.py completely
+
     def set_standard_view(self, view_type):
         """Set a standard view based on type"""
-        # Reset the rotation matrix based on view type
         if view_type == "top":
             # Top view: Y is up
             self.rotation_matrix = np.array([
@@ -493,7 +494,7 @@ class DesktopRenderer:
                 [0, 1, 0]
             ])
             self.orbit_angle_horizontal = 0
-            self.orbit_angle_vertical = -np.pi / 2 + 0.1  # Almost -90 degrees
+            self.orbit_angle_vertical = -np.pi / 2 + 0.1
 
         elif view_type == "front":
             # Front view: Z is forward, Y is up
@@ -526,32 +527,18 @@ class DesktopRenderer:
             self.orbit_angle_vertical = 0
 
         elif view_type == "home":
-            # Home/Default view (isometric-ish)
-            h_angle = -np.pi / 4  # -45 degrees
-            v_angle = np.pi / 6  # 30 degrees
-
-            # Horizontal rotation (around Y axis)
-            cos_h = np.cos(h_angle)
-            sin_h = np.sin(h_angle)
-            ry = np.array([
-                [cos_h, 0, sin_h],
-                [0, 1, 0],
-                [-sin_h, 0, cos_h]
+            # Create a direct rotation matrix for perfect isometric view
+            # This is a fixed isometric view matrix - (1,1,1) direction view
+            s3 = np.sqrt(3)
+            self.rotation_matrix = np.array([
+                [np.sqrt(2) / 2, 0, -np.sqrt(2) / 2],
+                [-1 / s3, np.sqrt(2 / 3), -1 / s3],
+                [1 / s3, np.sqrt(2 / 3), 1 / s3]
             ])
 
-            # Vertical rotation (around X axis)
-            cos_v = np.cos(v_angle)
-            sin_v = np.sin(v_angle)
-            rx = np.array([
-                [1, 0, 0],
-                [0, cos_v, -sin_v],
-                [0, sin_v, cos_v]
-            ])
-
-            # Create the rotation matrix
-            self.rotation_matrix = np.dot(ry, rx)
-            self.orbit_angle_horizontal = h_angle
-            self.orbit_angle_vertical = v_angle
+            # Set orbit angles - approximate values matching the matrix
+            self.orbit_angle_horizontal = -np.pi / 4  # -45 degrees
+            self.orbit_angle_vertical = np.arctan(1 / np.sqrt(2))  # ~35.264 degrees
 
         print(f"View changed to: {view_type}")
 

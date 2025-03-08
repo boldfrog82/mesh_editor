@@ -32,6 +32,8 @@ class DesktopApp(SceneObject):  # Make DesktopApp a SceneObject
         # Add this app to the scene graph so input handler can find it
         engine.scene.add_object(self)
 
+    # In desktop_app.py, ensure the init method properly sets up the initial view
+
     def init(self):
         """Initialize pygame and set up the window"""
         pygame.init()
@@ -39,6 +41,18 @@ class DesktopApp(SceneObject):  # Make DesktopApp a SceneObject
         pygame.display.set_caption("3D Mesh Editor")
         self.clock = pygame.time.Clock()
         self.ui_manager.init()  # Initialize UI
+
+        # Initialize renderer settings
+        self.renderer.scale = 100  # Increase scale for better visibility
+        self.renderer.translate = [self.width // 2, self.height // 2]  # Center of screen
+
+        # Set default view to isometric
+        self.renderer.set_standard_view("home")
+
+        # Set the camera to a good position
+        camera = self.engine.scene.active_camera
+        if camera:
+            camera.transform.position = np.array([0, 0, -10])  # Positioned farther away
 
     def run(self):
         """Main application loop"""
