@@ -75,6 +75,7 @@ The repository also ships an installable Progressive Web App located in
 files (for example with GitHub Pages or Netlify) and then install it on Android
 via **Add to Home Screen**.
 
+codex/build-minimum-viable-pwa
 1. Serve the directory locally to test (service workers run on `localhost`):
    ```bash
    cd pwa
@@ -102,3 +103,15 @@ via **Add to Home Screen**.
 - iOS Safari supports the experience but requires tapping the Share icon →
   **Add to Home Screen** manually. File picker access works, but the File
   System Access API is still limited on iOS.
+
+1. Serve the directory locally to test:
+   ```bash
+   python -m http.server --directory pwa 5173
+   ```
+   Then open `http://127.0.0.1:5173` in your browser.
+2. The app registers a service worker that pre-caches the shell and caches
+   Three.js modules on first load, making the viewer available offline after it
+   has been opened once.
+3. To deploy, copy the contents of `pwa/` to any static host. The installable
+   icons are shipped as SVG files so they remain editable without binary assets.
+Main
