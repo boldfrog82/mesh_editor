@@ -1,0 +1,69 @@
+# Mesh Editor Prototype
+
+This prototype boots a lightweight 3D engine that now supports both a desktop
+pygame shell and a mobile-friendly web viewer.
+
+## Desktop experience
+
+Run the default desktop experience (requires `pygame`):
+
+```bash
+python main.py
+```
+
+## Mobile web viewer
+
+The mobile viewer exposes the engine state over HTTP and renders the default
+scene in a responsive Three.js view that works well on Android browsers.
+
+1. Install Flask if it is not already available:
+   ```bash
+   pip install flask
+   ```
+2. Connect your development machine and Android phone to the same Wi-Fi
+   network. This allows the phone to reach the local server.
+3. Start the application in mobile mode. You can optionally control the bind
+   address and port directly from the command line:
+   ```bash
+   python main.py --mobile --host 0.0.0.0 --port 5000
+   ```
+   The server prints both the bind address and a "shareable" address that you
+   can open on another device. If you already know your computer's LAN IP, you
+   can pass it with `--host` (for example `--host 192.168.1.10`).
+4. On your Android device, open the printed URL in Chrome or Firefox. If the
+   page does not load, double-check that the phone is on the same network and
+   that the desktop firewall allows incoming connections on the chosen port.
+5. Use the on-screen instructions to orbit, pan, or zoom the model.
+
+You can also force mobile mode without the command-line flag by setting an
+environment variable:
+
+```bash
+export MESH_EDITOR_FORCE_MOBILE=1
+python main.py
+```
+
+By default the server listens on all interfaces (`0.0.0.0`) and port `5000`.
+Override these defaults with the `--host`/`--port` flags or the environment
+variables `MESH_EDITOR_MOBILE_HOST` and `MESH_EDITOR_MOBILE_PORT` when needed.
+
+### Smoke-testing the mobile server
+
+After starting the server you can confirm that it is running by fetching the
+scene payload from the same machine:
+
+```bash
+curl http://127.0.0.1:5000/api/scene
+```
+
+The command should print a JSON document describing the meshes and active
+camera. If you have trouble reaching the endpoint locally, resolve that issue
+before attempting to connect from your phone.
+
+## Notes
+
+- The mobile viewer currently streams a snapshot of meshes that exist when the
+  server starts. Use the **Refresh scene** button in the UI to fetch the latest
+  data.
+- Advanced modeling features remain desktop-only while the mobile workflow
+  focuses on reviewing and light navigation of the scene.
