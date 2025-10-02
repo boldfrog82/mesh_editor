@@ -3,6 +3,56 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+codex/build-minimum-viable-pwa
+  <title>Mesh Editor (PWA)</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="stylesheet" href="./app/style.css">
+</head>
+<body>
+  <header><strong>Mesh Editor (PWA)</strong></header>
+  <main>
+    <div class="controls">
+      <button id="install" hidden>Install app</button>
+      <button id="sample">Load sample cube</button>
+      <input id="file" type="file" accept=".json,.obj" />
+    </div>
+    <div id="viewer"></div>
+  </main>
+  <footer><small>Offline-ready. Add to Home Screen to install.</small></footer>
+
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158/build/three.module.js";
+    import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.158/examples/jsm/controls/OrbitControls.js";
+    import { OBJLoader } from "https://cdn.jsdelivr.net/npm/three@0.158/examples/jsm/loaders/OBJLoader.js";
+    import { initApp } from "./app/main.js";
+
+    initApp({ THREE, OrbitControls, OBJLoader });
+  </script>
+
+  <script>
+    let deferredPrompt;
+    const installButton = document.getElementById('install');
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      installButton.hidden = false;
+    });
+
+    installButton?.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      installButton.disabled = true;
+      await deferredPrompt.prompt();
+      deferredPrompt = null;
+      installButton.hidden = true;
+      installButton.disabled = false;
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js', { scope: './' });
+    }
+  </script>
+
   <title>Mesh Editor Mobile</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
@@ -121,5 +171,6 @@ resize(); animate();
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
 </script>
+Main
 </body>
 </html>

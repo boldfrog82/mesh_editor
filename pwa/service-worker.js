@@ -1,10 +1,22 @@
+codex/build-minimum-viable-pwa
+const CACHE = "mesh-editor-v3";
+
 const CACHE = "mesh-editor-v2";
+Main
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
+codex/build-minimum-viable-pwa
+  "./app/style.css",
+  "./app/main.js",
+  "https://cdn.jsdelivr.net/npm/three@0.158/build/three.module.js",
+  "https://cdn.jsdelivr.net/npm/three@0.158/examples/jsm/controls/OrbitControls.js",
+  "https://cdn.jsdelivr.net/npm/three@0.158/examples/jsm/loaders/OBJLoader.js"
+
   "./icon-192.svg",
   "./icon-512.svg"
+Main
 ];
 
 self.addEventListener("install", (event) => {
@@ -16,21 +28,38 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
+codex/build-minimum-viable-pwa
+      Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
+
       Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+Main
     )
   );
 });
 
 self.addEventListener("fetch", (event) => {
+<codex/build-minimum-viable-pwa
+=
   if (event.request.method !== "GET") {
     return;
   }
 
+>Main
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) {
         return cached;
       }
+codex/build-minimum-viable-pwa
+      return fetch(event.request).then((response) => {
+        if (!response || response.status !== 200 || response.type === "opaque") {
+          return response;
+        }
+        const cloned = response.clone();
+        caches.open(CACHE).then((cache) => cache.put(event.request, cloned));
+        return response;
+      });
+
 
       return fetch(event.request)
         .then((response) => {
@@ -49,6 +78,7 @@ self.addEventListener("fetch", (event) => {
             return caches.match("./index.html");
           }
         });
+Main
     })
   );
 });
