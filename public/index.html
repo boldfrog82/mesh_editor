@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Mesh Editor Mobile</title>
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="stylesheet" href="../app/main.css" />
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    window.__MESH_EDITOR_CONFIG__ = {
+      babylonBaseUrl: "https://cdn.babylonjs.com",
+      dracoDecoderUrl: "https://cdn.babylonjs.com/draco/",
+      meshoptDecoderUrl: "https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/" 
+    };
+  </script>
+  <script type="module" src="../app/main.js"></script>
+</body>
+</html>
