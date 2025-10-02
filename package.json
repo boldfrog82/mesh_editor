@@ -1,0 +1,25 @@
+{
+  "name": "mesh-editor",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/preview.mjs"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^6.43.0",
+    "@babylonjs/gui": "^6.43.0",
+    "@babylonjs/loaders": "^6.43.0",
+    "@babylonjs/materials": "^6.43.0",
+    "@babylonjs/serializers": "^6.43.0",
+    "draco3dgltf": "^1.5.7",
+    "ktx-parse": "^0.7.0",
+    "meshoptimizer": "^0.20.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.12",
+    "selfsigned": "^2.1.1"
+  }
+}

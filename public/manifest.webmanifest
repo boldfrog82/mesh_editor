@@ -1,0 +1,36 @@
+{
+  "name": "Mesh Editor Mobile",
+  "short_name": "MeshEditor",
+  "description": "Mobile-first Babylon.js 3D modeling Progressive Web App",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADs7b0pAAAAGXRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4wLjEyQZz7ZQAAAK9JREFUeF7t0EEKwCAQBEG//09zBRI2RzA2ppvFMsrW8dz/Vjg8wNFlEVVVVVVVVdfr8fMDc0HVd13Xdd13XdfX+fgG4eYK9C9AQwK0FDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDAqQUMCpBQwKkFDCF8C7KQ+JQULg5AAAAAElFTkSuQmCC",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAADOtka5AAAAGXRFWHRTb2Z0d2FyZQBwYWludC5uZXQgNC4wLjEyQZz7ZQAAAXFJREFUeF7t0EEKgCAQBMG9/3+zE+I02BhM43LYY2ex1fvMcziB0kRRVVVVVVVVdZ3fD+0HLdN1XXdd13Xd93w/gc3DMxX4F0BzArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTArQUwK0FMCtBTApQXwKwnfz9Ckuf0AAAAAElFTkSuQmCC",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "categories": ["productivity", "graphics", "design"],
+  "shortcuts": [
+    {
+      "name": "New Project",
+      "url": "./?new",
+      "description": "Create a new modeling project"
+    },
+    {
+      "name": "Open Project",
+      "url": "./?open",
+      "description": "Open a saved project"
+    }
+  ]
+}
