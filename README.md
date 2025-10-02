@@ -27,6 +27,7 @@ iterating:
 python -m http.server --directory public 4173
 ```
 
+codex/build-minimum-viable-pwa
 Then open [http://127.0.0.1:4173](http://127.0.0.1:4173). The landing page loads
 `app/main.js`, spins up Babylon.js (WebGPU when available, else WebGL2), and
 initialises the UI shell. The runtime announces the active backend in the status
@@ -83,3 +84,64 @@ panel and the Add-to-Home-Screen banner appears after the first successful load.
 
 Contributions are welcome—fork the repo, extend the engine modules, and open a
 pull request describing the modeling, UV, or painting features you added.
+
+The command should print a JSON document describing the meshes and active
+camera. If you have trouble reaching the endpoint locally, resolve that issue
+before attempting to connect from your phone.
+
+## Notes
+
+- The mobile viewer currently streams a snapshot of meshes that exist when the
+  server starts. Use the **Refresh scene** button in the UI to fetch the latest
+  data.
+- Advanced modeling features remain desktop-only while the mobile workflow
+  focuses on reviewing and light navigation of the scene.
+
+## Installable PWA (offline-ready)
+
+The repository also ships an installable Progressive Web App located in
+[`pwa/`](pwa/) that runs entirely client-side. You can deploy it as static
+files (for example with GitHub Pages or Netlify) and then install it on Android
+via **Add to Home Screen**.
+
+codex/build-minimum-viable-pwa
+1. Serve the directory locally to test (service workers run on `localhost`):
+   ```bash
+   cd pwa
+   python -m http.server 5173
+   ```
+   Then open `http://127.0.0.1:5173` in your browser.
+2. The app registers a service worker scoped to `/pwa/` that pre-caches the app
+   shell plus the Three.js CDN modules it imports. After the first successful
+   load, the viewer works completely offline.
+3. To deploy, point GitHub Pages (or any static host) at the `pwa/` directory.
+   Make sure the site is served over **HTTPS**—Chrome will then surface the
+   install prompt once the manifest and service worker are detected.
+4. The manifest embeds base64 PNG icons directly, satisfying Android's Add to
+   Home Screen requirements while keeping the artwork fully text-based for
+   source control friendliness.
+
+**Troubleshooting**
+
+- If the **Install app** button never appears, open DevTools → Application →
+  Manifest to confirm each field is valid and that the page is controlled by a
+  service worker.
+- Offline failures usually indicate that one of the CDN modules was blocked on
+  first load. Clear the site data and reload while online to re-populate the
+  cache.
+- iOS Safari supports the experience but requires tapping the Share icon →
+  **Add to Home Screen** manually. File picker access works, but the File
+  System Access API is still limited on iOS.
+
+1. Serve the directory locally to test:
+   ```bash
+   python -m http.server --directory pwa 5173
+   ```
+   Then open `http://127.0.0.1:5173` in your browser.
+2. The app registers a service worker that pre-caches the shell and caches
+   Three.js modules on first load, making the viewer available offline after it
+   has been opened once.
+3. To deploy, copy the contents of `pwa/` to any static host. The installable
+   icons are shipped as SVG files so they remain editable without binary assets.
+Main
+Main
