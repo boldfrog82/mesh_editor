@@ -1,60 +1,89 @@
-# Mesh Editor Prototype
+# Mesh Editor Mobile PWA
 
-This prototype boots a lightweight 3D engine that now supports both a desktop
-pygame shell and a mobile-friendly web viewer.
+This repository contains an installable Progressive Web App that boots a
+Babylon.js scene with mobile-first controls, persistent storage via OPFS, and a
+project-centric workflow. The current build focuses on the core shell and data
+flow so you can iterate quickly on modeling, UV, and painting features while the
+app remains deployable as static files.
 
-## Desktop experience
+## Repository layout
 
-Run the default desktop experience (requires `pygame`):
-
-```bash
-python main.py
+```
+app/        # PWA bootstrap, runtime composition, global state
+engine/     # Scene runtime (Babylon.js), modeling/UV/paint subsystems
+ui/         # Mobile UI: viewport chrome, panels, overlays, toolbar
+io/         # GLB import/export hooks and texture encoders
+storage/    # Origin Private File System adapters & autosave helpers
+public/     # Web app manifest, service worker, installable entry point
+vendor/     # Place self-hosted third-party libs if you choose to bundle later
 ```
 
-## Mobile web viewer
+## Local development
 
-The mobile viewer exposes the engine state over HTTP and renders the default
-scene in a responsive Three.js view that works well on Android browsers.
-
-1. Install Flask if it is not already available:
-   ```bash
-   pip install flask
-   ```
-2. Connect your development machine and Android phone to the same Wi-Fi
-   network. This allows the phone to reach the local server.
-3. Start the application in mobile mode. You can optionally control the bind
-   address and port directly from the command line:
-   ```bash
-   python main.py --mobile --host 0.0.0.0 --port 5000
-   ```
-   The server prints both the bind address and a "shareable" address that you
-   can open on another device. If you already know your computer's LAN IP, you
-   can pass it with `--host` (for example `--host 192.168.1.10`).
-4. On your Android device, open the printed URL in Chrome or Firefox. If the
-   page does not load, double-check that the phone is on the same network and
-   that the desktop firewall allows incoming connections on the chosen port.
-5. Use the on-screen instructions to orbit, pan, or zoom the model.
-
-You can also force mobile mode without the command-line flag by setting an
-environment variable:
+Service workers require HTTPS or `localhost`, so use a tiny static server while
+iterating:
 
 ```bash
-export MESH_EDITOR_FORCE_MOBILE=1
-python main.py
+python -m http.server --directory public 4173
 ```
 
-By default the server listens on all interfaces (`0.0.0.0`) and port `5000`.
-Override these defaults with the `--host`/`--port` flags or the environment
-variables `MESH_EDITOR_MOBILE_HOST` and `MESH_EDITOR_MOBILE_PORT` when needed.
+codex/build-minimum-viable-pwa
+Then open [http://127.0.0.1:4173](http://127.0.0.1:4173). The landing page loads
+`app/main.js`, spins up Babylon.js (WebGPU when available, else WebGL2), and
+initialises the UI shell. The runtime announces the active backend in the status
+panel and the Add-to-Home-Screen banner appears after the first successful load.
 
-### Smoke-testing the mobile server
+## Deployment
 
-After starting the server you can confirm that it is running by fetching the
-scene payload from the same machine:
+1. Commit the repository to GitHub and enable **Pages → Deploy from branch →
+   `main` → `/public`**.
+2. Visit the published URL over HTTPS. Chrome will surface an install prompt
+   once the manifest and service worker are detected. Safari users can add the
+   app via the Share sheet.
+3. After the first online visit, all JavaScript modules and Babylon.js CDN
+   assets are cached offline by `public/sw.js`.
 
-```bash
-curl http://127.0.0.1:5000/api/scene
-```
+## Features snapshot
+
+- Mobile-first Babylon.js viewport with touch gestures (ArcRotateCamera).
+- Status HUD reporting backend (WebGPU/WebGL2), FPS, draw calls, storage usage.
+- Project picker backed by OPFS (falls back to in-memory store when unsupported).
+- Autosave scaffolding (OPFS metadata writing hooks) ready for scene + texture
+  persistence.
+- Toolbar with mode switches for Object, Edit, UV, Paint, Materials, Export.
+- First-run overlay detailing gestures and the three primary workflows.
+- Skeleton modeling/UV/paint engines ready for incremental tool integration.
+
+> **Note:** Geometry editing, UV unwrapping, texture painting, and modifier
+> stacks are represented by stubs that currently surface toasts. The runtime is
+> wired so you can implement each operation inside `engine/` without touching
+> the UI shell or storage layer.
+
+## Extending the toolset
+
+- Flesh out `engine/mesh.js` to support face/edge/vertex selections and
+  operations such as Extrude, Inset, Bevel, Loop Cut, Weld, Mirror, Subdivide,
+  and Decimate.
+- Build the UV workflow in `engine/uv.js` to mark seams in 3D, preview islands
+  in 2D, and export packed layouts to `/textures/uv_*.png` via OPFS.
+- Implement painting in `engine/paint.js` using render targets, brush dynamics,
+  and `io/ktx2.js` for PNG → KTX2 conversion (web workers recommended).
+- Use `storage/opfs.js` to persist project state, autosaves, textures, and
+  thumbnails. Hook `setInterval` autosaves (every 60 s) once your serialization
+  format is stable.
+- Bundle Babylon.js locally (drop files into `vendor/` and update
+  `window.__MESH_EDITOR_CONFIG__`) if you need full offline bootstrap without a
+  CDN warm-up.
+
+## Testing checklist
+
+- [ ] Create a project, add primitives, switch tools, and confirm selections.
+- [ ] Install the PWA on Android/iOS and verify offline startup.
+- [ ] Inspect DevTools → Application → Storage to see OPFS usage updates.
+- [ ] Hook up Babylon's GLB exporter in `io/glb.js` and validate round-trips.
+
+Contributions are welcome—fork the repo, extend the engine modules, and open a
+pull request describing the modeling, UV, or painting features you added.
 
 The command should print a JSON document describing the meshes and active
 camera. If you have trouble reaching the endpoint locally, resolve that issue
@@ -114,4 +143,5 @@ codex/build-minimum-viable-pwa
    has been opened once.
 3. To deploy, copy the contents of `pwa/` to any static host. The installable
    icons are shipped as SVG files so they remain editable without binary assets.
+Main
 Main
