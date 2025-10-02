@@ -67,3 +67,21 @@ before attempting to connect from your phone.
   data.
 - Advanced modeling features remain desktop-only while the mobile workflow
   focuses on reviewing and light navigation of the scene.
+
+## Installable PWA (offline-ready)
+
+The repository also ships an installable Progressive Web App located in
+[`pwa/`](pwa/) that runs entirely client-side. You can deploy it as static
+files (for example with GitHub Pages or Netlify) and then install it on Android
+via **Add to Home Screen**.
+
+1. Serve the directory locally to test:
+   ```bash
+   python -m http.server --directory pwa 5173
+   ```
+   Then open `http://127.0.0.1:5173` in your browser.
+2. The app registers a service worker that pre-caches the shell and caches
+   Three.js modules on first load, making the viewer available offline after it
+   has been opened once.
+3. To deploy, copy the contents of `pwa/` to any static host. The installable
+   icons are shipped as SVG files so they remain editable without binary assets.

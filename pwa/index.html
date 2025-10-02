@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mesh Editor Mobile</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <style>
+    :root{color-scheme:dark;background:#0f172a;color:#f8fafc;font-family:Inter,system-ui,Segoe UI,sans-serif}
+    body{margin:0;display:flex;flex-direction:column;min-height:100vh}
+    header,footer{padding:12px 16px;border-bottom:1px solid #213046} footer{border-top:1px solid #213046;border-bottom:none;margin-top:auto;opacity:.75}
+    main{padding:12px;display:flex;flex-direction:column;gap:12px}
+    #viewer{width:100%;height:60vh;min-height:340px;border-radius:12px;border:1px solid #213046;overflow:hidden}
+    button{appearance:none;border:0;border-radius:999px;padding:.6rem 1.1rem;font-weight:700;background:linear-gradient(135deg,#38bdf8,#22c55e);color:#0f172a;cursor:pointer}
+    input[type="file"]{margin-left:12px}
+  </style>
+</head>
+<body>
+<header><strong>Mesh Editor (PWA)</strong></header>
+<main>
+  <div>
+    <button id="loadSample">Load sample cube</button>
+    <input id="file" type="file" accept=".json,.obj" />
+  </div>
+  <div id="viewer"></div>
+</main>
+<footer><small>Offline-capable. Add to Home Screen to install.</small></footer>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.158/build/three.module.js";
+import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.158/examples/jsm/controls/OrbitControls.js";
+import { OBJLoader } from "https://cdn.jsdelivr.net/npm/three@0.158/examples/jsm/loaders/OBJLoader.js";
+
+const viewer = document.getElementById("viewer");
+const fileInput = document.getElementById("file");
+const loadSample = document.getElementById("loadSample");
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+viewer.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x111827);
+const camera = new THREE.PerspectiveCamera(60, viewer.clientWidth/viewer.clientHeight, 0.1, 5000);
+camera.position.set(4,3,6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor=.08;
+
+scene.add(new THREE.AmbientLight(0xffffff,.7));
+const d1 = new THREE.DirectionalLight(0xffffff,.9); d1.position.set(5,10,7); scene.add(d1);
+
+const group = new THREE.Group(); scene.add(group);
+
+function resize(){
+  const w = viewer.clientWidth, h = viewer.clientHeight;
+  camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
+}
+addEventListener("resize", resize);
+
+function frame(){
+  const box = new THREE.Box3().setFromObject(group);
+  if(!box.isEmpty()){
+    const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x,size.y,size.z)||1;
+    const dist = maxDim / (2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))) * 1.2;
+    camera.position.copy(center.clone().add(new THREE.Vector3(dist, dist*0.6, dist)));
+    controls.target.copy(center); controls.update();
+  }
+}
+
+function clear(){ while(group.children.length) group.remove(group.children[0]); }
+
+function loadSceneJSON(data){
+  clear();
+  (data.meshes||[]).forEach(md=>{
+    const positions = md.vertices.flat();
+    const indices = [];
+    (md.faces||[]).forEach(f=>{ if(f.length===3){indices.push(...f)} else if(f.length===4){indices.push(f[0],f[1],f[2], f[0],f[2],f[3])} });
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(positions,3));
+    if(indices.length) g.setIndex(indices);
+    g.computeVertexNormals();
+    const m = new THREE.MeshStandardMaterial({ roughness:.45, metalness:.1 });
+    const mesh = new THREE.Mesh(g,m);
+    const t=md.transform||{}, p=t.position||[0,0,0], r=t.rotation||[0,0,0], s=t.scale||[1,1,1];
+    mesh.position.set(...p); mesh.rotation.set(...r); mesh.scale.set(...s);
+    group.add(mesh);
+  });
+  frame();
+}
+
+function loadOBJText(text){
+  clear();
+  const loader = new OBJLoader();
+  const obj = loader.parse(text);
+  obj.traverse(c=>{ if(c.isMesh){ c.material = new THREE.MeshStandardMaterial({roughness:.5, metalness:.05}); group.add(c); } });
+  frame();
+}
+
+fileInput.addEventListener("change", async e=>{
+  const f = e.target.files?.[0]; if(!f) return;
+  const text = await f.text();
+  if(f.name.toLowerCase().endsWith(".obj")) loadOBJText(text);
+  else loadSceneJSON(JSON.parse(text));
+});
+
+loadSample.addEventListener("click", ()=>{
+  loadSceneJSON({
+    version:1,
+    meshes:[{ name:"Cube",
+      vertices:[[ -1,-1, 1],[ 1,-1, 1],[ 1, 1, 1],[ -1, 1, 1],[ -1,-1,-1],[ 1,-1,-1],[ 1, 1,-1],[ -1, 1,-1]],
+      faces:[[0,1,2,3],[1,5,6,2],[5,4,7,6],[4,0,3,7],[3,2,6,7],[4,5,1,0]],
+      transform:{ position:[0,0,0], rotation:[0,0,0], scale:[1,1,1] }
+    }]
+  });
+});
+
+function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
+resize(); animate();
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
+</script>
+</body>
+</html>
