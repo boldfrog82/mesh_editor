@@ -95,6 +95,11 @@ button {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+#toggle-wireframe:not(.active) {
+  background: #374151;
+  color: #d1d5db;
+}
+
 button:disabled {
   cursor: progress;
   opacity: 0.6;
@@ -102,6 +107,11 @@ button:disabled {
 
 button:not(:disabled):active {
   transform: scale(0.97);
+}
+
+.button-row {
+  display: flex;
+  gap: 0.75rem;
 }
 
 footer {

@@ -26,7 +26,12 @@
           <li>Pinch with two fingers to zoom in or out.</li>
           <li>Tap the refresh button below if you update the desktop scene.</li>
         </ol>
-        <button id="refresh">Refresh scene</button>
+        <div class="button-row">
+          <button id="refresh">Refresh scene</button>
+          <button id="toggle-wireframe" title="Toggle wireframe (not implemented yet)">
+            Toggle wireframe
+          </button>
+        </div>
       </section>
     </main>
 
@@ -41,6 +46,7 @@
       const viewer = document.getElementById("viewer");
       const loading = document.getElementById("loading");
       const refreshButton = document.getElementById("refresh");
+      const toggleWireframeButton = document.getElementById("toggle-wireframe");
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(window.devicePixelRatio);
@@ -79,6 +85,7 @@
 
       let meshGroup = new THREE.Group();
       scene.add(meshGroup);
+      let isWireframeVisible = true;
 
       async function loadScene() {
         loading.hidden = false;
@@ -151,6 +158,7 @@
           wireframe.position.copy(mesh.position);
           wireframe.rotation.copy(mesh.rotation);
           wireframe.scale.copy(mesh.scale);
+          wireframe.visible = isWireframeVisible;
 
           meshGroup.add(mesh);
           meshGroup.add(wireframe);
@@ -177,7 +185,19 @@
         renderer.setSize(clientWidth, clientHeight);
       }
 
+      function toggleWireframe() {
+        isWireframeVisible = !isWireframeVisible;
+        toggleWireframeButton.classList.toggle("active", isWireframeVisible);
+
+        meshGroup.children.forEach((obj) => {
+          if (obj instanceof THREE.LineSegments) {
+            obj.visible = isWireframeVisible;
+          }
+        });
+      }
+
       refreshButton.addEventListener("click", loadScene);
+      toggleWireframeButton.addEventListener("click", toggleWireframe);
       window.addEventListener("resize", onWindowResize);
 
       function animate() {
@@ -186,6 +206,7 @@
         renderer.render(scene, camera);
       }
 
+      toggleWireframeButton.classList.toggle("active", isWireframeVisible);
       onWindowResize();
       loadScene();
       animate();
